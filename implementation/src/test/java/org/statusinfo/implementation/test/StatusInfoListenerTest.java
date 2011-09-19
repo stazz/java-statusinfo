@@ -99,10 +99,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
             @Override
             public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
             {
-                if( ChangeType.BEGAN.equals( changeType ) )
-                {
-                    latch.countDown();
-                }
+                latch.countDown();
             }
 
             @Override
@@ -115,7 +112,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
         Assert.assertEquals( "Amount of triggers must be two.", 2, latch.getCount() );
         this.getStatusInfo().endOperation( creation2.getReceipt() );
         this.getStatusInfo().endOperation( creation.getReceipt() );
-        Assert.assertEquals( "Amount of triggers must be two.", 2, latch.getCount() );
+        Assert.assertEquals( "Amount of triggers must be zero.", 0, latch.getCount() );
     }
 
     @Test
