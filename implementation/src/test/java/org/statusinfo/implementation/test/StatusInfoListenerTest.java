@@ -15,7 +15,6 @@
 package org.statusinfo.implementation.test;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;

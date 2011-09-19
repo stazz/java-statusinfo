@@ -18,7 +18,7 @@ import org.qi4j.bootstrap.AssemblyException;
 import org.qi4j.bootstrap.ModuleAssembly;
 import org.qi4j.test.AbstractQi4jTest;
 import org.statusinfo.api.StatusInfoService;
-import org.statusinfo.implementation.bootstrap.StatusInfoAssembler;
+import org.statusinfo.api.bootstrap.StatusInfoAssemblerProvider;
 
 /**
  * @author Stanislav Muhametsin
@@ -33,7 +33,7 @@ public class AbstractStatusInfoTest extends AbstractQi4jTest
     public void assemble( ModuleAssembly module )
         throws AssemblyException
     {
-        new StatusInfoAssembler( Visibility.module ).assemble( module );
+        StatusInfoAssemblerProvider.DEFAULT.getAssembler( Visibility.module ).assemble( module );
     }
 
     @Override
