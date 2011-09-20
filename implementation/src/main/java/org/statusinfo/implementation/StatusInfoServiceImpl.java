@@ -54,11 +54,18 @@ public class StatusInfoServiceImpl
 
     private static class StatusInfoInfo
     {
+        private final StatusInfoInfo _parent;
         private final StatusInfoImpl _statusInfo;
         private final String _receipt;
 
         public StatusInfoInfo( StatusInfoImpl statusInfo, String receipt )
         {
+            this( null, statusInfo, receipt );
+        }
+
+        public StatusInfoInfo( StatusInfoInfo parent, StatusInfoImpl statusInfo, String receipt )
+        {
+            this._parent = parent;
             this._statusInfo = statusInfo;
             this._receipt = receipt;
         }
@@ -71,6 +78,11 @@ public class StatusInfoServiceImpl
         public String getReceipt()
         {
             return this._receipt;
+        }
+
+        public StatusInfoInfo getParent()
+        {
+            return this._parent;
         }
     }
 
@@ -100,15 +112,6 @@ public class StatusInfoServiceImpl
             return this._associatedStatusReceipt;
         }
     }
-
-    private static ThreadLocal<Integer> OPERATION_IDS = new ThreadLocal<Integer>()
-    {
-        @Override
-        protected Integer initialValue()
-        {
-            return 0;
-        }
-    };
 
     private List<StatusListenerInfo> _listeners;
     private Object _listenersLock;
@@ -369,8 +372,6 @@ public class StatusInfoServiceImpl
 
     protected String newID()
     {
-        int current = OPERATION_IDS.get();
-        OPERATION_IDS.set( current + 1 );
-        return Integer.toString( current );
+        return UUID.randomUUID().toString();
     }
 }
