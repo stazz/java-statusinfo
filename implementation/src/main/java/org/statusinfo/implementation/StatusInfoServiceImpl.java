@@ -15,16 +15,19 @@ package org.statusinfo.implementation;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.qi4j.api.mixin.Mixins;
 import org.qi4j.api.service.Activatable;
 import org.qi4j.api.service.ServiceComposite;
+import org.qi4j.api.specification.Specification;
+import org.qi4j.api.util.Iterables;
 import org.statusinfo.api.NoOperationInProgressException;
 import org.statusinfo.api.OperationCreationResult;
 import org.statusinfo.api.StatusInfo;
@@ -54,7 +57,11 @@ public class StatusInfoServiceImpl
 
     private static class StatusInfoInfo
     {
+        // Parent must never be this
         private final StatusInfoInfo _parent;
+
+        // This object must never be in _children
+        private final Set<StatusInfoInfo> _children;
         private final StatusInfoImpl _statusInfo;
         private final String _receipt;
 
@@ -66,6 +73,7 @@ public class StatusInfoServiceImpl
         public StatusInfoInfo( StatusInfoInfo parent, StatusInfoImpl statusInfo, String receipt )
         {
             this._parent = parent;
+            this._children = new HashSet<StatusInfoInfo>();
             this._statusInfo = statusInfo;
             this._receipt = receipt;
         }
@@ -83,6 +91,11 @@ public class StatusInfoServiceImpl
         public StatusInfoInfo getParent()
         {
             return this._parent;
+        }
+
+        public Set<StatusInfoInfo> getChildren()
+        {
+            return this._children;
         }
     }
 
@@ -115,7 +128,7 @@ public class StatusInfoServiceImpl
 
     private List<StatusListenerInfo> _listeners;
     private Object _listenersLock;
-    private Deque<StatusInfoInfo> _statuses;
+    private Map<String, StatusInfoInfo> _statuses;
     private Object _statusesLock;
 
     @Override
@@ -125,7 +138,7 @@ public class StatusInfoServiceImpl
         this._listenersLock = new Object();
         this._statusesLock = new Object();
         this._listeners = new ArrayList<StatusListenerInfo>();
-        this._statuses = new ArrayDeque<StatusInfoInfo>();
+        this._statuses = new HashMap<String, StatusInfoInfo>();
     }
 
     @Override
@@ -154,7 +167,8 @@ public class StatusInfoServiceImpl
     {
         synchronized( this._statusesLock )
         {
-            StatusInfoInfo info = this._statuses.peek();
+            // Find operation with no children in this thread
+            StatusInfoInfo info = this.currentChildlessStatusInSameThread( Thread.currentThread() );
             if( info != null )
             {
                 String associatedReceipt = info.getReceipt();
@@ -200,10 +214,13 @@ public class StatusInfoServiceImpl
     @Override
     public OperationCreationResult startOperation( Thread thread, String name, int maxSteps )
     {
-        synchronized( this._statusesLock )
-        {
-            return this.doStartOperation( thread, name, maxSteps );
-        }
+        return this.doStartOperation( null, thread, name, maxSteps );
+    }
+
+    @Override
+    public OperationCreationResult startSubOperation( String parentReceipt, String name )
+    {
+        return this.doStartOperation( parentReceipt, Thread.currentThread(), name, NO_MAX_STEPS );
     }
 
     @Override
@@ -232,18 +249,11 @@ public class StatusInfoServiceImpl
         {
             if( receipt == null )
             {
-                info = this._statuses.peek();
+                info = this.currentChildlessStatusInSameThread( Thread.currentThread() );
             }
             else
             {
-                for( StatusInfoInfo tst : this._statuses )
-                {
-                    if( receipt.equals( tst.getReceipt() ) )
-                    {
-                        info = tst;
-                        break;
-                    }
-                }
+                info = this._statuses.get( receipt );
             }
             notify = info != null;
             if( notify )
@@ -262,11 +272,30 @@ public class StatusInfoServiceImpl
         }
     }
 
-    protected OperationCreationResult doStartOperation( Thread thread, String name, int maxSteps )
+    protected OperationCreationResult doStartOperation( String parentReceipt, Thread thread, String name, int maxSteps )
     {
-        StatusInfoInfo info = new StatusInfoInfo( new StatusInfoImpl( this.newID(), name, thread, maxSteps ), UUID
-            .randomUUID().toString() );
-        this._statuses.push( info );
+        StatusInfoInfo info = null;
+        synchronized( this._statusesLock )
+        {
+            StatusInfoInfo parent = null;
+            if( parentReceipt == null )
+            {
+                parent = this.currentChildlessStatusInSameThread( Thread.currentThread() );
+            }
+            else
+            {
+                parent = this._statuses.get( parentReceipt );
+            }
+            info = new StatusInfoInfo( parent, new StatusInfoImpl( this.newID(), name, thread, maxSteps ), UUID
+                .randomUUID().toString() );
+            if( parent != null )
+            {
+                parent.getChildren().add( info );
+            }
+
+            this._statuses.put( info.getReceipt(), info );
+        }
+
         this.notifyListeners( info, ChangeType.BEGAN );
         return new OperationCreationResultImpl( info.getStatusInfo().getID(), info.getReceipt() );
     }
@@ -275,27 +304,26 @@ public class StatusInfoServiceImpl
     {
         List<StatusInfoInfo> endedOperations = new LinkedList<StatusInfoInfo>();
         Set<String> endedOperationReceipts = new HashSet<String>();
-        StatusInfoInfo info = null;
         synchronized( this._statusesLock )
         {
-            for( StatusInfoInfo tst : this._statuses )
+            if( this._statuses.containsKey( receipt ) )
             {
-                if( tst.getReceipt().equals( receipt ) )
-                {
-                    info = tst;
-                    break;
-                }
-            }
-            if( info != null )
-            {
-                info = this._statuses.peek();
+                StatusInfoInfo info = this.currentChildlessStatusInSameThread( receipt );
                 boolean matched = false;
-                while( !matched )
+                while( info != null && !matched )
                 {
-                    info = this._statuses.pop();
+                    if( info.getChildren().size() <= 1 )
+                    {
+                        this._statuses.remove( info.getReceipt() );
+                        endedOperations.add( info );
+                        endedOperationReceipts.add( info.getReceipt() );
+                        if( info.getParent() != null )
+                        {
+                            info.getParent().getChildren().remove( info );
+                        }
+                    }
                     matched = info.getReceipt().equals( receipt );
-                    endedOperations.add( info );
-                    endedOperationReceipts.add( info.getReceipt() );
+                    info = info.getParent();
                 }
             }
             else
@@ -373,5 +401,28 @@ public class StatusInfoServiceImpl
     protected String newID()
     {
         return UUID.randomUUID().toString();
+    }
+
+    protected StatusInfoInfo currentChildlessStatusInSameThread( String receipt )
+    {
+        StatusInfoInfo result = this._statuses.get( receipt );
+        if( result != null )
+        {
+            result = this.currentChildlessStatusInSameThread( result.getStatusInfo().getThread() );
+        }
+
+        return result;
+    }
+
+    protected StatusInfoInfo currentChildlessStatusInSameThread( final Thread thread )
+    {
+        return Iterables.first( Iterables.filter( new Specification<StatusInfoInfo>()
+        {
+            @Override
+            public boolean satisfiedBy( StatusInfoInfo item )
+            {
+                return item.getChildren().isEmpty() && thread.equals( item.getStatusInfo().getThread() );
+            }
+        }, this._statuses.values() ) );
     }
 }

@@ -27,6 +27,8 @@ import org.statusinfo.api.bootstrap.StatusInfoAssemblerProvider;
 public class AbstractStatusInfoTest extends AbstractQi4jTest
 {
 
+    public static final String OPERATION_NAME = "Testing operations.";
+
     private StatusInfoService _statusInfo;
 
     @Override

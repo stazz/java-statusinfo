@@ -33,6 +33,15 @@ public interface StatusInfoService
 
     public OperationCreationResult startOperation( Thread thread, String name, int maxSteps );
 
+    /**
+     * This method should be used when one wants to start a sub-operation from another thread.
+     * 
+     * @param receipt The receipt of the parent operation.
+     * @param name The name of the operation to begin.
+     * @return {@link OperationCreationResult} with information about current operation.
+     */
+    public OperationCreationResult startSubOperation( String parentReceipt, String name );
+
     public void endOperation( String receipt );
 
     public void updateCurrentOperation( int amountOfSteps );

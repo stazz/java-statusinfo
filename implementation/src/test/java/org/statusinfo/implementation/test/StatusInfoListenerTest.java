@@ -29,8 +29,6 @@ import org.statusinfo.api.StatusInfoListener;
 public class StatusInfoListenerTest extends AbstractStatusInfoTest
 {
 
-    public static final String OPERATION_NAME = "Testing operations.";
-
     @Test
     public void testEndingOperation()
         throws Exception
