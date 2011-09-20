@@ -38,4 +38,6 @@ public interface StatusInfoService
     public void updateCurrentOperation( int amountOfSteps );
 
     public void updateOperation( String receipt, int amountOfSteps );
+
+    // TODO public OperationSnapshot getSnapshotOfCurrentState();
 }
