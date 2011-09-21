@@ -21,6 +21,20 @@ public interface StatusInfoService
 {
     public static final int NO_MAX_STEPS = -1;
 
+    public interface Operation<ReturnType, ExceptionType extends Throwable>
+    {
+        ReturnType doOperation()
+            throws ExceptionType;
+    }
+
+    public <ReturnType, ExceptionType extends Throwable> ReturnType performOperation( String name,
+        Operation<ReturnType, ExceptionType> operation )
+        throws ExceptionType;
+
+    public <ReturnType, ExceptionType extends Throwable> ReturnType performOperation( String name, int maxSteps,
+        Operation<ReturnType, ExceptionType> operation )
+        throws ExceptionType;
+
     public void addStatusInfoListener( StatusInfoListener listener );
 
     public void addStatusInfoListenerUntilEndOfCurrentOperation( StatusInfoListener listener );

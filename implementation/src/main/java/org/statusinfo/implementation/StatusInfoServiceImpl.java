@@ -13,7 +13,6 @@
  */
 package org.statusinfo.implementation;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -152,6 +151,30 @@ public class StatusInfoServiceImpl
         this._statuses = null;
         this._listenersLock = null;
         this._statusesLock = null;
+    }
+
+    @Override
+    public <ReturnType, ExceptionType extends Throwable> ReturnType performOperation( String name,
+        Operation<ReturnType, ExceptionType> operation )
+        throws ExceptionType
+    {
+        return this.performOperation( name, NO_MAX_STEPS, operation );
+    }
+
+    @Override
+    public <ReturnType, ExceptionType extends Throwable> ReturnType performOperation( String name, int maxSteps,
+        Operation<ReturnType, ExceptionType> operation )
+        throws ExceptionType
+    {
+        OperationCreationResult creation = this.startOperation( name, maxSteps );
+        try
+        {
+            return operation.doOperation();
+        }
+        finally
+        {
+            this.endOperation( creation.getReceipt() );
+        }
     }
 
     @Override
