@@ -14,58 +14,56 @@
 
 package org.statusinfo.implementation;
 
-import org.qi4j.api.util.NullArgumentException;
-import org.statusinfo.api.OperationCreationResult;
+import org.statusinfo.api.StatusInfo;
+import org.statusinfo.api.StatusInfoSnapshot;
 
 /**
  * 
  * @author 2011 Stanislav Muhametsin
  */
-final class OperationCreationResultImpl
-    implements OperationCreationResult
+final class StatusInfoSnapshotImpl
+    implements StatusInfoSnapshot
 {
+    private final StatusInfo _statusInfo;
+    private final int _amountOfDedicatedListeners;
 
-    private final String _id;
-    private final String _receipt;
-
-    public OperationCreationResultImpl( String id, String receipt )
+    StatusInfoSnapshotImpl( StatusInfo statusInfo, int amountOfDedicatedListeners )
     {
-        NullArgumentException.validateNotNull( "ID", id );
-        NullArgumentException.validateNotNull( "Receipt", receipt );
-
-        this._id = id;
-        this._receipt = receipt;
+        this._statusInfo = statusInfo;
+        this._amountOfDedicatedListeners = amountOfDedicatedListeners;
     }
 
     @Override
-    public String getReceipt()
+    public StatusInfo getStatusInfo()
     {
-        return this._receipt;
+        return this._statusInfo;
     }
 
     @Override
-    public String getID()
+    public int getAmountOfDedicatedListeners()
     {
-        return this._id;
+        return this._amountOfDedicatedListeners;
     }
 
     @Override
     public boolean equals( Object obj )
     {
         return this == obj
-            || (obj instanceof OperationCreationResult && this._receipt.equals( ((OperationCreationResult) obj)
-                .getReceipt() ));
+            || (obj instanceof StatusInfoSnapshot && this._amountOfDedicatedListeners == ((StatusInfoSnapshot) obj)
+                .getAmountOfDedicatedListeners())
+            && this._statusInfo.equals( ((StatusInfoSnapshot) obj).getStatusInfo() );
     }
 
     @Override
     public int hashCode()
     {
-        return this._receipt.hashCode();
+        return this._statusInfo.hashCode();
     }
 
     @Override
     public String toString()
     {
-        return "Operation(id=" + this._id + ",receipt=" + this._receipt + ")";
+        return SnapshotToString.toString( this );
     }
+
 }

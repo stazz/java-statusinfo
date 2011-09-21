@@ -20,7 +20,7 @@ import org.statusinfo.api.NoOperationInProgressException;
  * @author Stanislav Muhametsin
  * 
  */
-public class StatusInfoTest extends AbstractStatusInfoTest
+public class StatusInfoServiceTest extends AbstractStatusInfoTest
 {
 
     @Test(expected = NoOperationInProgressException.class)

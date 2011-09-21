@@ -15,6 +15,7 @@
 package org.statusinfo.implementation.test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -65,8 +66,9 @@ public class ConcurrentStatusInfoListenerTest extends AbstractStatusInfoTest
             }
         } ).start();
 
-        // Give some time
-        Thread.sleep( 1000 );
-        Assert.assertEquals( "Amount of triggers must be zero.", 0, latch.getCount() );
+        if( !latch.await( 1000, TimeUnit.MILLISECONDS ) )
+        {
+            throw new Exception( "Did not receive notification in time." );
+        }
     }
 }

@@ -30,10 +30,13 @@ import org.qi4j.api.specification.Specification;
 import org.qi4j.api.util.Iterables;
 import org.statusinfo.api.NoOperationInProgressException;
 import org.statusinfo.api.OperationCreationResult;
+import org.statusinfo.api.OperationSnapshot;
 import org.statusinfo.api.StatusInfo;
 import org.statusinfo.api.StatusInfoListener;
 import org.statusinfo.api.StatusInfoListener.ChangeType;
 import org.statusinfo.api.StatusInfoService;
+import org.statusinfo.api.StatusInfoSnapshot;
+import org.statusinfo.api.ThreadSnapshot;
 
 /**
  * @author Stanislav Muhametsin
@@ -52,8 +55,6 @@ public class StatusInfoServiceImpl
     {
 
     }
-
-    static final int NO_MAX_STEPS = -1;
 
     private static class StatusInfoInfo
     {
@@ -168,7 +169,7 @@ public class StatusInfoServiceImpl
         synchronized( this._statusesLock )
         {
             // Find operation with no children in this thread
-            StatusInfoInfo info = this.currentChildlessStatusInSameThread( Thread.currentThread() );
+            StatusInfoInfo info = this.currentChildlessStatusInThisThread();
             if( info != null )
             {
                 String associatedReceipt = info.getReceipt();
@@ -185,11 +186,18 @@ public class StatusInfoServiceImpl
     }
 
     @Override
-    public void removeStatusInfoListener( StatusInfoListener listener )
+    public void removeStatusInfoListener( final StatusInfoListener listener )
     {
         synchronized( this._listenersLock )
         {
-            this._listeners.remove( listener );
+            this._listeners.remove( Iterables.first( Iterables.filter( new Specification<StatusListenerInfo>()
+            {
+                @Override
+                public boolean satisfiedBy( StatusListenerInfo item )
+                {
+                    return item.getListener().equals( listener );
+                }
+            }, this._listeners ) ) );
         }
     }
 
@@ -241,6 +249,12 @@ public class StatusInfoServiceImpl
         this.doUpdateOperation( receipt, amountOfSteps );
     }
 
+    @Override
+    public OperationSnapshot getSnapshotOfCurrentState()
+    {
+        return this.doGetSnapshot();
+    }
+
     protected void doUpdateOperation( String receipt, int amountOfSteps )
     {
         StatusInfoInfo info = null;
@@ -249,7 +263,7 @@ public class StatusInfoServiceImpl
         {
             if( receipt == null )
             {
-                info = this.currentChildlessStatusInSameThread( Thread.currentThread() );
+                info = this.currentChildlessStatusInThisThread();
             }
             else
             {
@@ -280,7 +294,7 @@ public class StatusInfoServiceImpl
             StatusInfoInfo parent = null;
             if( parentReceipt == null )
             {
-                parent = this.currentChildlessStatusInSameThread( Thread.currentThread() );
+                parent = this.currentChildlessStatusInThisThread();
             }
             else
             {
@@ -357,6 +371,53 @@ public class StatusInfoServiceImpl
         }
     }
 
+    protected OperationSnapshot doGetSnapshot()
+    {
+        synchronized( this._statusesLock )
+        {
+            Set<String> receipts = new HashSet<String>( this._statuses.keySet() );
+            Map<String, Integer> dedicatedListenerAmounts = new HashMap<String, Integer>();
+            int amountOfListeners = 0;
+            synchronized( this._listenersLock )
+            {
+                amountOfListeners = this._listeners.size();
+                for( StatusListenerInfo info : this._listeners )
+                {
+                    String receipt = info.getAssociatedStatusReceipt();
+                    if( receipt != null )
+                    {
+                        Integer current = dedicatedListenerAmounts.get( receipt );
+                        if( current == null )
+                        {
+                            current = 0;
+                        }
+                        ++current;
+                        dedicatedListenerAmounts.put( receipt, current );
+                    }
+                }
+            }
+
+            List<ThreadSnapshot> threadSnapshots = new ArrayList<ThreadSnapshot>();
+            while( !receipts.isEmpty() )
+            {
+                List<StatusInfoSnapshot> infoSnapshots = new ArrayList<StatusInfoSnapshot>();
+                StatusInfoInfo info = this.currentChildlessStatusInSameThread( receipts.iterator().next() );
+                Thread startThread = info.getStatusInfo().getThread();
+                while( info != null && info.getStatusInfo().getThread().equals( startThread ) )
+                {
+                    String receipt = info.getReceipt();
+                    infoSnapshots.add( new StatusInfoSnapshotImpl( info.getStatusInfo(), dedicatedListenerAmounts
+                        .containsKey( receipt ) ? dedicatedListenerAmounts.get( receipt ) : 0 ) );
+                    receipts.remove( receipt );
+                    info = info.getParent();
+                }
+                threadSnapshots.add( new ThreadSnapshotImpl( startThread, infoSnapshots ) );
+            }
+
+            return new OperationSnapshotImpl( threadSnapshots, amountOfListeners );
+        }
+    }
+
     protected void notifyListeners( StatusInfoInfo info, ChangeType type )
     {
         // Notify listeners
@@ -401,6 +462,11 @@ public class StatusInfoServiceImpl
     protected String newID()
     {
         return UUID.randomUUID().toString();
+    }
+
+    protected StatusInfoInfo currentChildlessStatusInThisThread()
+    {
+        return this.currentChildlessStatusInSameThread( Thread.currentThread() );
     }
 
     protected StatusInfoInfo currentChildlessStatusInSameThread( String receipt )

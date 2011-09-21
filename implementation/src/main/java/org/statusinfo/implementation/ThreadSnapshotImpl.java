@@ -14,58 +14,57 @@
 
 package org.statusinfo.implementation;
 
-import org.qi4j.api.util.NullArgumentException;
-import org.statusinfo.api.OperationCreationResult;
+import java.util.Collections;
+import java.util.List;
+
+import org.statusinfo.api.StatusInfoSnapshot;
+import org.statusinfo.api.ThreadSnapshot;
 
 /**
  * 
  * @author 2011 Stanislav Muhametsin
  */
-final class OperationCreationResultImpl
-    implements OperationCreationResult
+final class ThreadSnapshotImpl
+    implements ThreadSnapshot
 {
+    private final List<StatusInfoSnapshot> _statuses;
+    private final Thread _thread;
 
-    private final String _id;
-    private final String _receipt;
-
-    public OperationCreationResultImpl( String id, String receipt )
+    ThreadSnapshotImpl( Thread thread, List<StatusInfoSnapshot> statuses )
     {
-        NullArgumentException.validateNotNull( "ID", id );
-        NullArgumentException.validateNotNull( "Receipt", receipt );
-
-        this._id = id;
-        this._receipt = receipt;
+        this._thread = thread;
+        this._statuses = Collections.unmodifiableList( statuses );
     }
 
     @Override
-    public String getReceipt()
+    public List<StatusInfoSnapshot> getOperationStatuses()
     {
-        return this._receipt;
+        return this._statuses;
     }
 
     @Override
-    public String getID()
+    public Thread getThread()
     {
-        return this._id;
+        return this._thread;
     }
 
     @Override
     public boolean equals( Object obj )
     {
         return this == obj
-            || (obj instanceof OperationCreationResult && this._receipt.equals( ((OperationCreationResult) obj)
-                .getReceipt() ));
+            || (obj instanceof ThreadSnapshot && this._thread.equals( ((ThreadSnapshot) obj).getThread() ) && this._statuses
+                .equals( ((ThreadSnapshot) obj).getOperationStatuses() ));
     }
 
     @Override
     public int hashCode()
     {
-        return this._receipt.hashCode();
+        return this._thread.hashCode();
     }
 
     @Override
     public String toString()
     {
-        return "Operation(id=" + this._id + ",receipt=" + this._receipt + ")";
+        return SnapshotToString.toString( this );
     }
 }

@@ -13,13 +13,14 @@
  */
 package org.statusinfo.implementation;
 
+import org.qi4j.api.util.NullArgumentException;
 import org.statusinfo.api.StatusInfo;
 
 /**
  * @author Stanislav Muhametsin
  * 
  */
-class StatusInfoImpl
+final class StatusInfoImpl
     implements StatusInfo
 {
 
@@ -36,6 +37,9 @@ class StatusInfoImpl
 
     StatusInfoImpl( String id, String name, Thread thread, int maxSteps, int currentSteps )
     {
+        NullArgumentException.validateNotNull( "ID", id );
+        NullArgumentException.validateNotNull( "Thread", thread );
+
         this._id = id;
         this._name = name;
         this._thread = thread;
@@ -81,6 +85,24 @@ class StatusInfoImpl
     void addCurrentSteps( int amount )
     {
         this._currentSteps += amount;
+    }
+
+    @Override
+    public boolean equals( Object obj )
+    {
+        return this == obj || (obj instanceof StatusInfo && this._id.equals( ((StatusInfo) obj).getID() ));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this._id.hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+        return SnapshotToString.toString( this );
     }
 
 }

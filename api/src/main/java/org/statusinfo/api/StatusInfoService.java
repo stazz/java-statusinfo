@@ -19,6 +19,8 @@ package org.statusinfo.api;
  */
 public interface StatusInfoService
 {
+    public static final int NO_MAX_STEPS = -1;
+
     public void addStatusInfoListener( StatusInfoListener listener );
 
     public void addStatusInfoListenerUntilEndOfCurrentOperation( StatusInfoListener listener );
@@ -48,5 +50,5 @@ public interface StatusInfoService
 
     public void updateOperation( String receipt, int amountOfSteps );
 
-    // TODO public OperationSnapshot getSnapshotOfCurrentState();
+    public OperationSnapshot getSnapshotOfCurrentState();
 }
