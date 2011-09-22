@@ -48,15 +48,14 @@ public class OperationSnapshotTest extends AbstractStatusInfoTest
     {
         this.verifyEmptySnapshot();
         OperationCreationResult creation = this.getStatusInfo().startOperation( OPERATION_NAME );
-        this.verifyOperationSnapshot( this.toOperationSnapshot(
-            0,
-            this.toThreadSnapshot( Thread.currentThread(), this.toSnapshot( 0, creation.getID(), OPERATION_NAME,
-                Thread.currentThread(), StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
+        this.verifyOperationSnapshot( this.toOperationSnapshot( 0, this.toThreadSnapshot( Thread.currentThread(), this
+            .toSnapshot( 0, null, creation.getID(), OPERATION_NAME, Thread.currentThread(),
+                StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
         StatusInfoListener listener = new StatusInfoListener()
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
             }
 
@@ -67,15 +66,14 @@ public class OperationSnapshotTest extends AbstractStatusInfoTest
             }
         };
         this.getStatusInfo().addStatusInfoListener( listener );
-        this.verifyOperationSnapshot( this.toOperationSnapshot(
-            1,
-            this.toThreadSnapshot( Thread.currentThread(), this.toSnapshot( 0, creation.getID(), OPERATION_NAME,
-                Thread.currentThread(), StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
+        this.verifyOperationSnapshot( this.toOperationSnapshot( 1, this.toThreadSnapshot( Thread.currentThread(), this
+            .toSnapshot( 0, null, creation.getID(), OPERATION_NAME, Thread.currentThread(),
+                StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
         this.getStatusInfo().addStatusInfoListenerUntilEndOfCurrentOperation( new StatusInfoListener()
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
             }
 
@@ -85,10 +83,9 @@ public class OperationSnapshotTest extends AbstractStatusInfoTest
                 return true;
             }
         } );
-        this.verifyOperationSnapshot( this.toOperationSnapshot(
-            2,
-            this.toThreadSnapshot( Thread.currentThread(), this.toSnapshot( 1, creation.getID(), OPERATION_NAME,
-                Thread.currentThread(), StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
+        this.verifyOperationSnapshot( this.toOperationSnapshot( 2, this.toThreadSnapshot( Thread.currentThread(), this
+            .toSnapshot( 1, null, creation.getID(), OPERATION_NAME, Thread.currentThread(),
+                StatusInfoService.NO_MAX_STEPS, 0 ) ) ) );
         this.getStatusInfo().endOperation( creation.getReceipt() );
         this.verifyOperationSnapshot( this.toOperationSnapshot( 1 ) );
         this.getStatusInfo().removeStatusInfoListener( listener );
@@ -158,8 +155,8 @@ public class OperationSnapshotTest extends AbstractStatusInfoTest
         };
     }
 
-    protected StatusInfoSnapshot toSnapshot( final int amountOfDedicatedListeners, final String ID, final String name,
-        final Thread thread, final int maxSteps, final int currentSteps )
+    protected StatusInfoSnapshot toSnapshot( final int amountOfDedicatedListeners, final StatusInfo parent,
+        final String ID, final String name, final Thread thread, final int maxSteps, final int currentSteps )
     {
         return new StatusInfoSnapshot()
         {
@@ -198,6 +195,12 @@ public class OperationSnapshotTest extends AbstractStatusInfoTest
                     public int getCurrentSteps()
                     {
                         return currentSteps;
+                    }
+
+                    @Override
+                    public StatusInfo getParent()
+                    {
+                        return parent;
                     }
 
                     @Override

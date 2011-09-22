@@ -39,7 +39,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
                 if( statusInfo.getID().equals( creation.getID() ) && OPERATION_NAME.equals( statusInfo.getName() )
                     && ChangeType.ENDED.equals( changeType ) )
@@ -68,7 +68,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
                 latch.countDown();
             }
@@ -94,7 +94,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
                 latch.countDown();
             }
@@ -122,7 +122,7 @@ public class StatusInfoListenerTest extends AbstractStatusInfoTest
         {
 
             @Override
-            public void operationChanged( StatusInfo statusInfo, ChangeType changeType )
+            public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded )
             {
                 latch.countDown();
             }

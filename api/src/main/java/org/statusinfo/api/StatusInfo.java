@@ -20,6 +20,8 @@ package org.statusinfo.api;
 public interface StatusInfo
 {
 
+    public StatusInfo getParent();
+
     public String getID();
 
     public String getName();

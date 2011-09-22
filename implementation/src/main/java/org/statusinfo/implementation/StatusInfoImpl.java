@@ -24,23 +24,25 @@ final class StatusInfoImpl
     implements StatusInfo
 {
 
+    private final StatusInfo _parent;
     private final String _id;
     private final String _name;
     private final Thread _thread;
     private final int _maxSteps;
     private int _currentSteps;
 
-    StatusInfoImpl( String id, String name, Thread thread, int maxSteps )
+    StatusInfoImpl( StatusInfo parent, String id, String name, Thread thread, int maxSteps )
     {
-        this( id, name, thread, maxSteps, 0 );
+        this( parent, id, name, thread, maxSteps, 0 );
     }
 
-    StatusInfoImpl( String id, String name, Thread thread, int maxSteps, int currentSteps )
+    StatusInfoImpl( StatusInfo parent, String id, String name, Thread thread, int maxSteps, int currentSteps )
     {
         NullArgumentException.validateNotNull( "ID", id );
         NullArgumentException.validateNotNull( "Thread", thread );
 
         this._id = id;
+        this._parent = parent;
         this._name = name;
         this._thread = thread;
         this._maxSteps = maxSteps;
@@ -75,6 +77,12 @@ final class StatusInfoImpl
     public String getID()
     {
         return this._id;
+    }
+
+    @Override
+    public StatusInfo getParent()
+    {
+        return this._parent;
     }
 
     void setCurrentSteps( int newCurrentSteps )

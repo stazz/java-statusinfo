@@ -28,5 +28,5 @@ public interface StatusInfoListener
 
     public boolean isInterestedInStatusInfo( StatusInfo statusInfo );
 
-    public void operationChanged( StatusInfo statusInfo, ChangeType changeType );
+    public void operationChanged( StatusInfo statusInfo, ChangeType changeType, int stepsAdded );
 }

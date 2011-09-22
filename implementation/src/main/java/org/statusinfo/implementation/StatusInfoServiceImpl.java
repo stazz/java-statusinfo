@@ -305,7 +305,7 @@ public class StatusInfoServiceImpl
         }
         if( notify )
         {
-            this.notifyListeners( info, ChangeType.CHANGED );
+            this.notifyListeners( info, ChangeType.CHANGED, amountOfSteps );
         }
     }
 
@@ -323,8 +323,8 @@ public class StatusInfoServiceImpl
             {
                 parent = this._statuses.get( parentReceipt );
             }
-            info = new StatusInfoInfo( parent, new StatusInfoImpl( this.newID(), name, thread, maxSteps ), UUID
-                .randomUUID().toString() );
+            info = new StatusInfoInfo( parent, new StatusInfoImpl( parent == null ? null : parent.getStatusInfo(),
+                this.newID(), name, thread, maxSteps ), UUID.randomUUID().toString() );
             if( parent != null )
             {
                 parent.getChildren().add( info );
@@ -333,7 +333,7 @@ public class StatusInfoServiceImpl
             this._statuses.put( info.getReceipt(), info );
         }
 
-        this.notifyListeners( info, ChangeType.BEGAN );
+        this.notifyListeners( info, ChangeType.BEGAN, 0 );
         return new OperationCreationResultImpl( info.getStatusInfo().getID(), info.getReceipt() );
     }
 
@@ -372,7 +372,7 @@ public class StatusInfoServiceImpl
         }
 
         // Notify listeners
-        this.notifyListeners( endedOperations, ChangeType.ENDED );
+        this.notifyListeners( endedOperations, ChangeType.ENDED, 0 );
 
         // Remove dedicated listeners
         synchronized( this._listenersLock )
@@ -441,7 +441,7 @@ public class StatusInfoServiceImpl
         }
     }
 
-    protected void notifyListeners( StatusInfoInfo info, ChangeType type )
+    protected void notifyListeners( StatusInfoInfo info, ChangeType type, int stepsAdded )
     {
         // Notify listeners
         List<StatusListenerInfo> list = null;
@@ -455,12 +455,12 @@ public class StatusInfoServiceImpl
             StatusInfo statusInfo = info.getStatusInfo();
             if( listener.isInterestedInStatusInfo( statusInfo ) )
             {
-                listener.operationChanged( statusInfo, type );
+                listener.operationChanged( statusInfo, type, stepsAdded );
             }
         }
     }
 
-    protected void notifyListeners( Iterable<StatusInfoInfo> infos, ChangeType type )
+    protected void notifyListeners( Iterable<StatusInfoInfo> infos, ChangeType type, int stepsAdded )
     {
         // Notify listeners
         List<StatusListenerInfo> list = null;
@@ -476,7 +476,7 @@ public class StatusInfoServiceImpl
                 StatusInfo statusInfo = info.getStatusInfo();
                 if( listener.isInterestedInStatusInfo( statusInfo ) )
                 {
-                    listener.operationChanged( statusInfo, type );
+                    listener.operationChanged( statusInfo, type, stepsAdded );
                 }
             }
         }
