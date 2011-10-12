@@ -58,7 +58,7 @@ public interface StatusInfoService
      */
     public OperationCreationResult startSubOperation( String parentReceipt, String name );
 
-    public void endOperation( String receipt );
+    public boolean endOperation( String receipt );
 
     public void updateCurrentOperation( int amountOfSteps );
 

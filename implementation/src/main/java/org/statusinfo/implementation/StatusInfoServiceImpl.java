@@ -255,9 +255,9 @@ public class StatusInfoServiceImpl
     }
 
     @Override
-    public void endOperation( String receipt )
+    public boolean endOperation( String receipt )
     {
-        this.doEndOperation( receipt );
+        return this.doEndOperation( receipt );
     }
 
     @Override
@@ -337,13 +337,15 @@ public class StatusInfoServiceImpl
         return new OperationCreationResultImpl( info.getStatusInfo().getID(), info.getReceipt() );
     }
 
-    protected void doEndOperation( String receipt )
+    protected boolean doEndOperation( String receipt )
     {
         List<StatusInfoInfo> endedOperations = new LinkedList<StatusInfoInfo>();
         Set<String> endedOperationReceipts = new HashSet<String>();
+        boolean result = false;
         synchronized( this._statusesLock )
         {
-            if( this._statuses.containsKey( receipt ) )
+            result = this._statuses.containsKey( receipt );
+            if( result )
             {
                 StatusInfoInfo info = this.currentChildlessStatusInSameThread( receipt );
                 boolean matched = false;
@@ -363,12 +365,12 @@ public class StatusInfoServiceImpl
                     info = info.getParent();
                 }
             }
-            else
-            {
-                // TODO maybe just ignore instead of throwing?
-                throw new NoOperationInProgressException( "Could not find operation with receipt " + receipt
-                    + " to end." );
-            }
+            //            else
+            //            {
+            // TODO maybe just ignore instead of throwing?
+            //throw new NoOperationInProgressException( "Could not find operation with receipt " + receipt
+            //    + " to end." );
+            //            }
         }
 
         // Notify listeners
@@ -392,6 +394,8 @@ public class StatusInfoServiceImpl
                 }
             }
         }
+
+        return result;
     }
 
     protected OperationSnapshot doGetSnapshot()
