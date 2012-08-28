@@ -44,7 +44,7 @@ public class AbstractStatusInfoTest extends AbstractQi4jTest
     {
         super.setUp();
 
-        this._statusInfo = (StatusInfoService) this.serviceLocator.findService( StatusInfoService.class ).get();
+        this._statusInfo = (StatusInfoService) this.module.findService( StatusInfoService.class ).get();
     }
 
     @Override
