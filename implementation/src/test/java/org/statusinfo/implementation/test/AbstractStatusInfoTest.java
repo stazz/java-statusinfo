@@ -43,7 +43,6 @@ public class AbstractStatusInfoTest extends AbstractQi4jTest
         throws Exception
     {
         super.setUp();
-
         this._statusInfo = this.module.findService( StatusInfoService.class ).get();
     }
 
