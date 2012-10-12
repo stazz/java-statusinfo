@@ -50,7 +50,7 @@
     <version.junit>4.8.1</version.junit>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.slf4j>1.6.1</version.slf4j>
-    <version.qi4j>1.4-SNAPSHOT</version.qi4j>
+    <version.qi4j>2.0-beta-1</version.qi4j>
   </properties>
 
   <inceptionYear>2011</inceptionYear>
@@ -92,6 +92,12 @@
       <dependency>
         <groupId>org.qi4j.core</groupId>
         <artifactId>org.qi4j.core.runtime</artifactId>
+        <scope>test</scope>
+        <version>${version.qi4j}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.qi4j.core</groupId>
+        <artifactId>org.qi4j.core.testsupport</artifactId>
         <scope>test</scope>
         <version>${version.qi4j}</version>
       </dependency>

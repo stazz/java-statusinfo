@@ -26,7 +26,6 @@ import org.statusinfo.api.StatusInfoListener;
 import org.statusinfo.api.StatusInfoService;
 import org.statusinfo.api.StatusInfoSnapshot;
 import org.statusinfo.api.ThreadSnapshot;
-import org.statusinfo.api.StatusInfoListener.ChangeType;
 import org.statusinfo.implementation.SnapshotToString;
 
 /**
